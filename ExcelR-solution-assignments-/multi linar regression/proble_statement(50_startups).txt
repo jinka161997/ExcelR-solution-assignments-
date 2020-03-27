@@ -1,0 +1,83 @@
+# choose the Cars.csv data set
+Startup_j<-read.csv(file.choose())
+Startup_j1<-Startup_j[-c(4)]
+attach(Startup_j1)
+mean(Profit)
+sd(Profit)
+pnorm(Startup_j,112012,40306)
+summary(Startup_j)  
+cor(Startup_j$Profit,Startup_j$R.D.Spend)
+cor(Startup_j$Profit,Startup_j$Administration)
+cor(Startup_j$Profit,Startup_j$Marketing.Spend)
+
+#Find the correlation b/n Output (MPG) & (HP,VOL,SP)-Scatter plot
+pairs(Startup_j1)
+plot(Startup_j1)
+
+#Correlation Coefficient matrix - Strength & Direction of Correlation
+cor(Startup_j1)
+### Partial Correlation matrix - Pure Correlation  b/n the varibles
+install.packages("corpcor")
+library(corpcor)
+cor2pcor(cor(Startup_j1))
+# The Linear Model of interest with all the columns
+model_Startup<-lm(Profit~.,data=Startup_j1)
+model1_Startup<-lm(Profit~R.D.Spend+Administration+Marketing.Spend,data = Startup_j1)         
+summary(model_Startup)
+summary(model1_Startup)
+# Multicollinearity check
+# Model based on only R.D.Spend 
+model.Rds<-lm(Profit~R.D.Spend, data=Startup_j1)
+summary(model.Rds)  # R.D.Spend is significant
+# Model based on only Administration
+model.Adms<-lm(Profit~Administration,data=Startup_j1)
+summary(model.Adms)  # Administration is insignificant
+model.Ms<-lm(Profit~Marketing.Spend, data=Startup_j1)
+summary(model.Ms)  # Maeketing.Spend is significant
+model.RDS.MS<-lm(Profit~R.D.Spend+Marketing.Spend, data = Startup_j1)
+summary(model.RDS.MS)  # R.D.Spend and Administration are significant
+install.packages("psych")
+library(psych)
+pairs.panels(Startup_j1)
+# Applying VIF function on model built on all inputs
+## Variance Inflation factor to check collinearity b/n variables
+install.packages("vif")
+library(vif)
+vif(model_Startup)
+## Added Variable plot to check correlation b/n variables and o/p variable
+install.packages("avplots")
+library(avplots)
+plot(model_Startup,id.n=2,id.cex=0.7)
+### Scatter plot matrix along with Correlation Coefficients
+panel.cor<-function(x,y,digits=2,prefix="",cex.cor)
+  
+{
+  usr<- par("usr"); on.exit(par(usr))
+  par(usr=c(0,1,0,1))
+  r=(cor(x,y))
+  txt<- format(c(r,0.123456789),digits=digits)[1]
+  txt<- paste(prefix,txt,sep="")
+  if(missing(cex.cor)) cex<-0.4/strwidth(txt)
+  text(0.5,0.5,txt,cex=cex)
+}
+pairs(Startup_j1,upper.panel = panel.cor,main="Scatter plot matrix with Correlation coefficients")
+# It is Better to delete influential observations rather than deleting entire column which is 
+# costliest process
+# Deletion Diagnostics for identifying influential observations
+influence.measures(model_Startup)
+library(model_Startup)
+## plotting Influential measures 
+windows()
+influenceIndexPlot(model_Startup,id.n=3) # index plots for infuence measures
+influencePlot(model_Startup,id.n=3) # A user friendly representation of the above
+# Regression after deleting the 77th observation, which is influential observation
+model_12<-lm(Profit~.-Administration,data=Startup_j1)
+summary(model_12)
+## Final model
+plot(lm(Profit~.-Marketing.Spend,data=Startup_j1))
+summary(lm(Profit~.-Marketing.Spend,data=Startup_j1))
+
+finalmodel<-lm(Profit~.-Marketing.Spend,data=Startup_j1)
+summary(finalmodel)
+plot(finalmodel)
+hist(residuals(finalmodel)) 
